@@ -34,7 +34,7 @@ export class FuzzyFilter implements IFilter {
     return limitedResults.map(result => result.item);
   }
 
-  isValid(pattern: string): boolean {
+  isValid(_pattern: string): boolean {
     // Fuzzy search is generally tolerant of any input
     return true;
   }

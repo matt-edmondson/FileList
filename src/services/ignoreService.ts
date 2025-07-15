@@ -7,7 +7,7 @@ export class IgnoreService {
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
   private lastLoadTime = 0;
 
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(private _context: vscode.ExtensionContext) {}
 
   async isIgnored(filePath: string, options: IgnoreServiceOptions): Promise<boolean> {
     const workspaceFolder = this.getWorkspaceFolder();

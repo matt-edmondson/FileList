@@ -19,11 +19,11 @@ export class FileListPanel {
   private refreshDebounced: () => void;
 
   constructor(
-    private context: vscode.ExtensionContext,
-    private fileService: FileService,
-    private ignoreService: IgnoreService
+    private _context: vscode.ExtensionContext,
+    private _fileService: FileService,
+    private _ignoreService: IgnoreService
   ) {
-    this.treeDataProvider = new FileListProvider(this.fileService);
+    this.treeDataProvider = new FileListProvider(this._fileService);
     this.globFilter = new GlobFilter();
     this.regexFilter = new RegexFilter();
     this.fuzzyFilter = new FuzzyFilter();
@@ -68,7 +68,7 @@ export class FileListPanel {
 
   private async performRefresh(): Promise<void> {
     try {
-      const files = await this.fileService.getWorkspaceFiles({
+      const files = await this._fileService.getWorkspaceFiles({
         respectIgnore: this.currentFilter.respectIgnore,
         includeHidden: false,
         followSymlinks: false,
@@ -162,8 +162,8 @@ export class FileListPanel {
 
   async onWorkspaceChanged(): Promise<void> {
     // Clear caches when workspace changes
-    await this.fileService.refreshFileCache();
-    await this.ignoreService.refreshCache();
+    await this._fileService.refreshFileCache();
+    await this._ignoreService.refreshCache();
     await this.refreshFiles();
   }
 
@@ -264,7 +264,7 @@ export class FileListPanel {
 
   // Method to get workspace statistics
   async getWorkspaceStats(): Promise<WorkspaceStats> {
-    return await this.fileService.getWorkspaceStats();
+    return await this._fileService.getWorkspaceStats();
   }
 
   // Method to export current results

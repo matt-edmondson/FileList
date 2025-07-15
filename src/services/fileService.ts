@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { FileItem, FileServiceOptions, WorkspaceStats } from '../types';
-import { normalizePath, getRelativePath, getFileName, getFileExtension } from '../utils/pathUtils';
+import { normalizePath, getRelativePath } from '../utils/pathUtils';
 
 export class FileService {
   private fileCache: Map<string, FileItem[]> = new Map();
   private lastScanTime: Date = new Date(0);
   private readonly cacheTtl = 5 * 60 * 1000; // 5 minutes
 
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(private _context: vscode.ExtensionContext) {}
 
   async getWorkspaceFiles(options: FileServiceOptions = { respectIgnore: true }): Promise<FileItem[]> {
     const workspaceFolder = this.getWorkspaceFolder();

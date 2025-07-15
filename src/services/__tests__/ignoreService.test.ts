@@ -1,6 +1,4 @@
-import { IgnoreService } from '../ignoreService';
-import { IgnoreServiceOptions } from '../../types';
-import { vscode } from '../../__tests__/setup';
+// Test imports handled by require() in tests
 
 describe('IgnoreService', () => {
   describe('basic functionality', () => {

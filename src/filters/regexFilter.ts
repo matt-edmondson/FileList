@@ -129,7 +129,6 @@ export class RegexFilter implements IFilter {
   explainPattern(pattern: string): string {
     try {
       const { pattern: regexPattern, flags } = this.parsePattern(pattern);
-      const regex = new RegExp(regexPattern, flags);
       
       let explanation = `Regular expression: ${regexPattern}`;
       

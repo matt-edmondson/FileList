@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FileItem, FileTreeItem } from '../types';
 import { FileService } from '../services/fileService';
-import { getFileExtension, getFileName } from '../utils/pathUtils';
+import { getFileExtension } from '../utils/pathUtils';
 
 export class FileListProvider implements vscode.TreeDataProvider<FileTreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<FileTreeItem | undefined | null | void> = new vscode.EventEmitter<FileTreeItem | undefined | null | void>();
@@ -10,7 +10,7 @@ export class FileListProvider implements vscode.TreeDataProvider<FileTreeItem> {
   private files: FileItem[] = [];
   private treeItems: FileTreeItem[] = [];
 
-  constructor(private fileService: FileService) {}
+  constructor(private _fileService: FileService) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();

@@ -1,6 +1,4 @@
-import { FileService } from '../fileService';
-import { FileItem } from '../../types';
-import { vscode } from '../../__tests__/setup';
+// Test imports handled by require() in tests
 
 describe('FileService', () => {
   describe('basic functionality', () => {
