@@ -1,0 +1,105 @@
+name: Publish to Marketplace
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: true
+        default: 'latest'
+
+jobs:
+  publish-vscode:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install vsce
+      run: npm install -g vsce
+    
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Run type check
+      run: npm run type-check
+    
+    - name: Run unit tests
+      run: npm run test
+    
+    - name: Run integration tests
+      run: npm run test:integration
+    
+    - name: Build extension
+      run: npm run compile
+    
+    - name: Package extension
+      run: vsce package
+    
+    - name: Publish to VS Code Marketplace
+      run: vsce publish -p ${{ secrets.VSCODE_MARKETPLACE_TOKEN }}
+      env:
+        VSCODE_MARKETPLACE_TOKEN: ${{ secrets.VSCODE_MARKETPLACE_TOKEN }}
+
+  publish-openvsx:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install ovsx
+      run: npm install -g ovsx
+    
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Run type check
+      run: npm run type-check
+    
+    - name: Run unit tests
+      run: npm run test
+    
+    - name: Run integration tests
+      run: npm run test:integration
+    
+    - name: Build extension
+      run: npm run compile
+    
+    - name: Package extension
+      run: vsce package
+    
+    - name: Publish to Open VSX Registry
+      run: ovsx publish *.vsix -p ${{ secrets.OPENVSX_ACCESS_TOKEN }}
+      env:
+        OPENVSX_ACCESS_TOKEN: ${{ secrets.OPENVSX_ACCESS_TOKEN }}
+
+  notify-success:
+    runs-on: ubuntu-latest
+    needs: [publish-vscode, publish-openvsx]
+    if: success()
+    steps:
+    - name: Notify success
+      run: |
+        echo "✅ Extension published successfully to both marketplaces!"
+        echo "VS Code Marketplace: https://marketplace.visualstudio.com/items?itemName=matt-edmondson.filelist-panel"
+        echo "Open VSX Registry: https://open-vsx.org/extension/matt-edmondson/filelist-panel" 
