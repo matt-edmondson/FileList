@@ -76,7 +76,7 @@ const vscode = {
     Expanded: 2,
   },
   TreeItem: class MockTreeItem {
-    constructor(public label: string, public collapsibleState?: number) {
+    constructor(public _label: string, public _collapsibleState?: number) {
       // Mock implementation
     }
   },

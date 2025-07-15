@@ -22,8 +22,8 @@ export interface FilterOptions {
 export type FilterType = 'glob' | 'regex' | 'fuzzy';
 
 export interface IFilter {
-  apply(files: FileItem[], options: FilterOptions): Promise<FileItem[]>;
-  isValid(pattern: string): boolean;
+  apply(_files: FileItem[], _options: FilterOptions): Promise<FileItem[]>;
+  isValid(_pattern: string): boolean;
 }
 
 export interface FilterResult {

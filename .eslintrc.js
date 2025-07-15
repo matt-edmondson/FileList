@@ -14,7 +14,7 @@ module.exports = {
     es6: true
   },
   rules: {
-    'no-unused-vars': 'warn',
+    'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
     'no-console': 'off',
     'semi': ['error', 'always'],
     'quotes': ['error', 'single'],
