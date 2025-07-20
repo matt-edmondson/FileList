@@ -17,6 +17,7 @@ export class FileListPanel {
   private isInitialized = false;
   private lastRefreshTime = 0;
   private refreshDebounced: () => void;
+  private statusBarItem: vscode.StatusBarItem;
 
   constructor(
     private _context: vscode.ExtensionContext,
@@ -35,6 +36,12 @@ export class FileListPanel {
     this.refreshDebounced = debounce(() => {
       this.performRefresh();
     }, this.getConfig().debounceDelay);
+
+    // Create status bar item
+    this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    this.statusBarItem.command = 'fileList.setFilterText';
+    this.statusBarItem.tooltip = 'Click to set filter text';
+    this.updateStatusBar();
   }
 
   async initialize(): Promise<void> {
@@ -93,6 +100,7 @@ export class FileListPanel {
     }
     this.currentFilter.pattern = pattern;
     
+    this.updateStatusBar();
     await this.refreshFiles();
   }
 
@@ -127,6 +135,7 @@ export class FileListPanel {
 
   clearFilter(): void {
     this.currentFilter.pattern = '';
+    this.updateStatusBar();
     this.refreshFiles();
   }
 
@@ -143,9 +152,20 @@ export class FileListPanel {
     this.refreshFiles();
   }
 
-  toggleCaseSensitive(): void {
+  async toggleCaseSensitive(): Promise<void> {
     this.currentFilter.caseSensitive = !this.currentFilter.caseSensitive;
-    this.refreshFiles();
+    
+    const status = this.currentFilter.caseSensitive ? 'enabled' : 'disabled';
+    vscode.window.showInformationMessage(`Case sensitive filtering ${status}`);
+    
+    this.updateStatusBar();
+    
+    // Re-apply filter if pattern exists
+    if (this.currentFilter.pattern) {
+      await this.applyFilter(this.currentFilter.pattern, this.currentFilter.type);
+    } else {
+      this.refreshFiles();
+    }
   }
 
   shouldRefreshOnChange(): boolean {
@@ -278,5 +298,147 @@ export class FileListPanel {
     });
     
     await vscode.window.showTextDocument(document);
+  }
+
+  // Method to show filter input dialog
+  async showFilterInput(): Promise<void> {
+    const currentPattern = this.currentFilter.pattern || '';
+    const currentType = this.currentFilter.type;
+    
+    const placeholder = this.getPlaceholderForFilterType(currentType);
+    const prompt = `Enter ${currentType} pattern to filter files`;
+    
+    const input = await vscode.window.showInputBox({
+      prompt,
+      placeHolder: placeholder,
+      value: currentPattern,
+      validateInput: (text: string) => {
+        if (!text.trim()) {
+          return undefined; // Empty is valid (clears filter)
+        }
+        
+        // Validate based on current filter type
+        const isValid = this.validateFilterPattern(text, currentType);
+        return isValid ? undefined : `Invalid ${currentType} pattern`;
+      }
+    });
+
+    if (input !== undefined) {
+      this.currentFilter.pattern = input.trim();
+      if (!this.currentFilter.pattern) {
+        this.clearFilter();
+      } else {
+        await this.applyFilter(this.currentFilter.pattern, this.currentFilter.type);
+      }
+    }
+  }
+
+  // Method to show filter type selection
+  async showFilterTypeSelection(): Promise<void> {
+    const items = [
+      {
+        label: '$(search) Glob',
+        description: 'Use glob patterns (*, **, ?, [abc])',
+        filterType: 'glob' as FilterType
+      },
+      {
+        label: '$(regex) Regex',
+        description: 'Use regular expressions',
+        filterType: 'regex' as FilterType
+      },
+      {
+        label: '$(zap) Fuzzy',
+        description: 'Use fuzzy matching (smart search)',
+        filterType: 'fuzzy' as FilterType
+      }
+    ];
+
+    // Mark current selection
+    const currentIndex = items.findIndex(item => item.filterType === this.currentFilter.type);
+    if (currentIndex >= 0) {
+      items[currentIndex].label = '$(check) ' + items[currentIndex].label.substring(2);
+    }
+
+    const selection = await vscode.window.showQuickPick(items, {
+      placeHolder: 'Select filter type',
+      matchOnDescription: true
+    });
+
+    if (selection) {
+      const oldType = this.currentFilter.type;
+      this.currentFilter.type = selection.filterType;
+      
+      // If pattern exists and types changed, re-validate and apply
+      if (this.currentFilter.pattern && oldType !== selection.filterType) {
+        const isValid = this.validateFilterPattern(this.currentFilter.pattern, this.currentFilter.type);
+        if (!isValid) {
+          vscode.window.showWarningMessage(
+            `Current pattern "${this.currentFilter.pattern}" is not valid for ${selection.filterType} filter. Please update the pattern.`
+          );
+          // Clear the pattern since it's not valid for the new type
+          this.currentFilter.pattern = '';
+        }
+                 await this.applyFilter(this.currentFilter.pattern, this.currentFilter.type);
+       }
+       
+       // Show status message
+       vscode.window.showInformationMessage(`Filter type changed to: ${selection.filterType}`);
+       this.updateStatusBar();
+     }
+   }
+
+   
+
+  // Helper method to get placeholder text for filter type
+  private getPlaceholderForFilterType(type: FilterType): string {
+    switch (type) {
+      case 'glob':
+        return 'e.g., **/*.ts, src/**/*.js, *.md';
+      case 'regex':
+        return 'e.g., \\.ts$, ^src/, test.*\\.js$';
+      case 'fuzzy':
+        return 'e.g., tsconfig, test util, src comp';
+      default:
+        return 'Enter filter pattern...';
+    }
+  }
+
+  // Helper method to validate filter pattern
+  private validateFilterPattern(pattern: string, type: FilterType): boolean {
+    switch (type) {
+      case 'glob':
+        return this.globFilter.isValid(pattern);
+      case 'regex':
+        return this.regexFilter.isValid(pattern);
+      case 'fuzzy':
+        return this.fuzzyFilter.isValid(pattern);
+      default:
+        return true;
+    }
+  }
+
+  // Helper method to update status bar
+  private updateStatusBar(): void {
+    const hasFilter = this.currentFilter.pattern.trim().length > 0;
+    const filterType = this.currentFilter.type;
+    const caseSensitive = this.currentFilter.caseSensitive;
+    
+    if (hasFilter) {
+      const caseIcon = caseSensitive ? '$(case-sensitive)' : '$(case-insensitive)';
+      const typeIcon = filterType === 'glob' ? '$(search)' : 
+                      filterType === 'regex' ? '$(regex)' : '$(zap)';
+      this.statusBarItem.text = `${typeIcon} ${this.currentFilter.pattern} ${caseIcon}`;
+      this.statusBarItem.tooltip = `Filter: ${filterType} pattern "${this.currentFilter.pattern}" (${caseSensitive ? 'case sensitive' : 'case insensitive'})`;
+    } else {
+      this.statusBarItem.text = '$(filter) No filter';
+      this.statusBarItem.tooltip = 'Click to set filter text';
+    }
+    
+    this.statusBarItem.show();
+  }
+
+  // Dispose method to clean up resources
+  dispose(): void {
+    this.statusBarItem.dispose();
   }
 } 

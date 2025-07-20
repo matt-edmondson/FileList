@@ -34,6 +34,21 @@ export function activate(context: vscode.ExtensionContext) {
     () => fileListPanel.toggleIgnoreFiles()
   );
 
+  const setFilterTextCommand = vscode.commands.registerCommand(
+    'fileList.setFilterText',
+    () => fileListPanel.showFilterInput()
+  );
+
+  const selectFilterTypeCommand = vscode.commands.registerCommand(
+    'fileList.selectFilterType',
+    () => fileListPanel.showFilterTypeSelection()
+  );
+
+  const toggleCaseSensitiveCommand = vscode.commands.registerCommand(
+    'fileList.toggleCaseSensitive',
+    () => fileListPanel.toggleCaseSensitive()
+  );
+
   // Register tree data provider
   const treeDataProvider = fileListPanel.getTreeDataProvider();
   if (treeDataProvider) {
@@ -92,9 +107,13 @@ export function activate(context: vscode.ExtensionContext) {
     refreshFilesCommand,
     clearFilterCommand,
     toggleIgnoreFilesCommand,
+    setFilterTextCommand,
+    selectFilterTypeCommand,
+    toggleCaseSensitiveCommand,
     workspaceWatcher,
     configurationWatcher,
-    workspaceWatcher2
+    workspaceWatcher2,
+    fileListPanel
   );
 
   // Initialize panel on startup

@@ -44,6 +44,21 @@
         "command": "fileList.toggleIgnoreFiles",
         "title": "Toggle Ignore Files",
         "icon": "$(eye)"
+      },
+      {
+        "command": "fileList.setFilterText",
+        "title": "Set Filter Text",
+        "icon": "$(search)"
+      },
+      {
+        "command": "fileList.selectFilterType",
+        "title": "Select Filter Type",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "fileList.toggleCaseSensitive",
+        "title": "Toggle Case Sensitive",
+        "icon": "$(case-sensitive)"
       }
     ],
     "views": {
@@ -80,6 +95,21 @@
           "command": "fileList.toggleIgnoreFiles",
           "when": "view == fileListPanel",
           "group": "navigation"
+        },
+        {
+          "command": "fileList.setFilterText",
+          "when": "view == fileListPanel",
+          "group": "1_filter"
+        },
+        {
+          "command": "fileList.selectFilterType",
+          "when": "view == fileListPanel",
+          "group": "1_filter"
+        },
+        {
+          "command": "fileList.toggleCaseSensitive",
+          "when": "view == fileListPanel",
+          "group": "1_filter"
         }
       ],
       "view/item/context": [
